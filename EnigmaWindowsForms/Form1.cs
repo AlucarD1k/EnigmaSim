@@ -57,7 +57,7 @@ namespace EnigmaWindowsForms
         {
             isInitializing = true;
             InitializeEnigma();
-            
+            UpdateRotorHeadsInTextBoxes();
             isInitializing = false;
         }
 
@@ -79,7 +79,7 @@ namespace EnigmaWindowsForms
                     {
                         char encrypted = enigmaInstance.Encrypt(c.ToString())[0];
                         textBox2.Text += encrypted;
-                        
+                        UpdateRotorHeadsInTextBoxes();
                     }
                     else
                     {
@@ -95,7 +95,16 @@ namespace EnigmaWindowsForms
             }
         }
 
-        
+        private void UpdateRotorHeadsInTextBoxes()
+        {
+            var rotors = enigmaInstance.Rotors.List;
+            if (rotors != null && rotors.Count >= 3)
+            {
+                label7.Text = rotors[0].Current.ToString(); // Первый ротор
+                label8.Text = rotors[1].Current.ToString(); // Второй ротор
+                label9.Text = rotors[2].Current.ToString(); // Третий ротор
+            }
+        }
 
         // Выбор типа ротора 1
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
