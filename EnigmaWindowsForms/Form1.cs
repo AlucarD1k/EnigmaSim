@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using EnigmaSim;
 
@@ -13,6 +6,20 @@ namespace EnigmaWindowsForms
 {
     public partial class Form1 : Form
     {
+        // Выбранные настройки роторов и рефлектора
+        RotorType Rotor1;
+        RotorType Rotor2;
+        RotorType Rotor3;
+        ReflectorType Reflector;
+
+        // Главная инстанция машины Enigma для текущей сессии ввода
+        private Enigma enigmaInstance;
+
+        // Текст, который уже был зашифрован (для отслеживания изменений)
+        private string lastInput = "";
+        // Защита от рекурсии при программном изменении полей
+        private bool isInitializing = false;
+
         public Form1()
         {
             InitializeComponent();
@@ -23,40 +30,64 @@ namespace EnigmaWindowsForms
             textBox3.Text = "A";
             textBox4.Text = "B";
             textBox5.Text = "C";
+            // Привязка обработчика (можно также сделать через дизайнер)
+            
         }
-        RotorType Rotor1;
-        RotorType Rotor2;
-        RotorType Rotor3;
-        ReflectorType Reflector;
 
-        private void button1_Click(object sender, EventArgs e)
+        private void InitializeEnigma()
         {
+            enigmaInstance = new Enigma();
+            enigmaInstance.Rotors.Clear();
 
-            Enigma en = new Enigma();
+            // Установка выбранных пользователем роторов и их начальных позиций
+            if (string.IsNullOrEmpty(textBox3.Text) || string.IsNullOrEmpty(textBox4.Text) || string.IsNullOrEmpty(textBox5.Text))
+                throw new Exception("Выберите начальное положение роторов");
 
+            enigmaInstance.Rotors.Add(Rotor1, char.Parse(textBox3.Text));
+            enigmaInstance.Rotors.Add(Rotor2, char.Parse(textBox4.Text));
+            enigmaInstance.Rotors.Add(Rotor3, char.Parse(textBox5.Text));
+            enigmaInstance.Rotors.SetReflector(Reflector);
 
+            lastInput = "";
+            textBox2.Text = "";
+        }
 
-            //Plugboard
-            //en.Plugboard.Add('X', 'D');
-            //en.Plugboard.Add('A', 'V');
+        // Кнопка "Сброс" - сбрасывает машину и очищает результаты (создайте такую кнопку в форме)
+        private void buttonReset_Click(object sender, EventArgs e)
+        {
+            isInitializing = true;
+            InitializeEnigma();
+            
+            isInitializing = false;
+        }
 
-            //en.Plugboard.Add('D', 'X');
-            //en.Plugboard.Add('V', 'A');
+        // Реальное шифрование по мере ввода
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            if (isInitializing) return;
             try
             {
-                //Rotors
-                if (textBox3.Text == "" || textBox4.Text == "" || textBox5.Text == "")
-                    throw new Exception("Выберите начальное положение роторов");
-                en.Rotors.Add(Rotor1, char.Parse(textBox3.Text));
-                en.Rotors.Add(Rotor2, char.Parse(textBox4.Text));
-                en.Rotors.Add(Rotor3, char.Parse(textBox5.Text));
+                // Всегда пересоздаём машину и прогоняем весь текст
+                InitializeEnigma();
 
-                //Reflector
-                en.Rotors.SetReflector(Reflector);
+                string input = textBox1.Text;
+                textBox2.Text = "";
 
-                string result = en.Encrypt(textBox1.Text);
+                foreach (char c in input)
+                {
+                    if (char.IsLetter(c))
+                    {
+                        char encrypted = enigmaInstance.Encrypt(c.ToString())[0];
+                        textBox2.Text += encrypted;
+                        
+                    }
+                    else
+                    {
+                        textBox2.Text += c;
+                    }
+                }
 
-                textBox2.Text = result;
+                lastInput = input;
             }
             catch (Exception ex)
             {
@@ -64,77 +95,60 @@ namespace EnigmaWindowsForms
             }
         }
 
+        
+
+        // Выбор типа ротора 1
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboBox1.SelectedIndex == 0)
+            switch (comboBox1.SelectedIndex)
             {
-                Rotor1 = RotorType.Rotor_I;
-            }
-            else if (comboBox1.SelectedIndex == 1)
-            {
-                Rotor1 = RotorType.Rotor_II;
-            }
-            else if (comboBox1.SelectedIndex == 2)
-            {
-                Rotor1 = RotorType.Rotor_III;
+                case 0: Rotor1 = RotorType.Rotor_I; break;
+                case 1: Rotor1 = RotorType.Rotor_II; break;
+                case 2: Rotor1 = RotorType.Rotor_III; break;
             }
         }
 
+        // Выбор типа ротора 2
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboBox2.SelectedIndex == 0)
+            switch (comboBox2.SelectedIndex)
             {
-                Rotor2 = RotorType.Rotor_I;
-            }
-            else if (comboBox2.SelectedIndex == 1)
-            {
-                Rotor2 = RotorType.Rotor_II;
-            }
-            else if (comboBox2.SelectedIndex == 2)
-            {
-                Rotor2 = RotorType.Rotor_III;
+                case 0: Rotor2 = RotorType.Rotor_I; break;
+                case 1: Rotor2 = RotorType.Rotor_II; break;
+                case 2: Rotor2 = RotorType.Rotor_III; break;
             }
         }
 
+        // Выбор типа ротора 3
         private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboBox3.SelectedIndex == 0)
+            switch (comboBox3.SelectedIndex)
             {
-                Rotor3 = RotorType.Rotor_I;
-            }
-            else if (comboBox3.SelectedIndex == 1)
-            {
-                Rotor3 = RotorType.Rotor_II;
-            }
-            else if (comboBox3.SelectedIndex == 2)
-            {
-                Rotor3 = RotorType.Rotor_III;
+                case 0: Rotor3 = RotorType.Rotor_I; break;
+                case 1: Rotor3 = RotorType.Rotor_II; break;
+                case 2: Rotor3 = RotorType.Rotor_III; break;
             }
         }
 
+        // Выбор рефлектора
         private void comboBox4_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboBox4.SelectedIndex == 0)
+            switch (comboBox4.SelectedIndex)
             {
-                Reflector = ReflectorType.UWK_A;
-            }
-            else if (comboBox4.SelectedIndex == 1)
-            {
-                Reflector = ReflectorType.UWK_B;
-            }
-            else if (comboBox4.SelectedIndex == 2)
-            {
-                Reflector = ReflectorType.UWK_C;
+                case 0: Reflector = ReflectorType.UWK_A; break;
+                case 1: Reflector = ReflectorType.UWK_B; break;
+                case 2: Reflector = ReflectorType.UWK_C; break;
             }
         }
 
+        // Валидация ввода для начальных букв роторов (A-Z, только одна буква)
         private void textBox3_KeyPress(object sender, KeyPressEventArgs e)
         {
             if ((e.KeyChar >= 'A' && e.KeyChar <= 'Z') && textBox3.Text.Length == 0)
                 return;
             if (e.KeyChar == (char)Keys.Back)
                 return;
-            e.KeyChar = '\n';
+            e.Handled = true;
         }
 
         private void textBox4_KeyPress(object sender, KeyPressEventArgs e)
@@ -143,7 +157,7 @@ namespace EnigmaWindowsForms
                 return;
             if (e.KeyChar == (char)Keys.Back)
                 return;
-            e.KeyChar = '\n';
+            e.Handled = true;
         }
 
         private void textBox5_KeyPress(object sender, KeyPressEventArgs e)
@@ -152,7 +166,7 @@ namespace EnigmaWindowsForms
                 return;
             if (e.KeyChar == (char)Keys.Back)
                 return;
-            e.KeyChar = '\n';
+            e.Handled = true;
         }
     }
 }

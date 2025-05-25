@@ -21,6 +21,7 @@ namespace EnigmaSim
             this.Reflector = HistoricData.Reflectors.ReflectorB;
         }
 
+        public List<Rotor> List {  get { return this._list; } }
         public void Add(RotorType type, char head)
         {
             Rotor rotor;
