@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 using EnigmaSim;
 
@@ -20,6 +22,20 @@ namespace EnigmaWindowsForms
         // Защита от рекурсии при программном изменении полей
         private bool isInitializing = false;
 
+        private Dictionary<char, Button> plugboardButtons = new Dictionary<char, Button>();
+        private char? selectedPlugboardChar = null;
+        // Словарь для пар: A->B, B->A, ...
+        private Dictionary<char, char> plugboardPairs = new Dictionary<char, char>();
+
+        // Массив из 13 ярких цветов для пар
+        private static readonly Color[] PairColors = new Color[]
+        {
+            Color.LightBlue, Color.LightGreen, Color.LightPink, Color.LightSalmon,
+            Color.LightGoldenrodYellow, Color.LightCoral, Color.LightCyan,
+            Color.LightSkyBlue, Color.MediumPurple, Color.PaleTurquoise,
+            Color.Wheat, Color.Khaki, Color.Plum
+        };
+
         public Form1()
         {
             InitializeComponent();
@@ -30,7 +46,7 @@ namespace EnigmaWindowsForms
             textBox3.Text = "A";
             textBox4.Text = "B";
             textBox5.Text = "C";
-            
+            InitPlugboardButtons();
         }
 
         private void InitializeEnigma()
@@ -49,6 +65,139 @@ namespace EnigmaWindowsForms
 
             lastInput = "";
             textBox2.Text = "";
+
+            enigmaInstance.Plugboard.Clear();
+
+            var used = new HashSet<char>();
+            foreach (var kv in plugboardPairs)
+            {
+                char a = char.ToUpper(kv.Key);
+                char b = char.ToUpper(kv.Value);
+                if (!used.Contains(a) && !used.Contains(b))
+                {
+                    // Используем метод Add, реализованный в Plugboard
+                    try
+                    {
+                        enigmaInstance.Plugboard.Add(a, b);
+                        used.Add(a);
+                        used.Add(b);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Если что-то не так, например, дублирование — покажем сообщение
+                        MessageBox.Show("Ошибка при добавлении пары на коммутационной панели: " + ex.Message);
+                    }
+                }
+            }
+        }
+
+        private void InitPlugboardButtons()
+        {
+            // button6 - button31 — это кнопки A-Z (button6 -> 'A', button7 -> 'B', ...)
+            for (int i = 0; i < 26; i++)
+            {
+                char letter = (char)('A' + i);
+
+                Button btn = this.Controls.Find($"button{6 + i}", true)[0] as Button;
+                btn.Tag = letter;
+                btn.Text = letter.ToString();
+                btn.BackColor = Color.LightGray;
+                btn.Click += PlugboardButton_Click;
+                plugboardButtons[letter] = btn;
+            }
+
+            RefreshPlugboardButtons();
+        }
+
+        private void PlugboardButton_Click(object sender, EventArgs e)
+        {
+            Button btn = sender as Button;
+            char letter = (char)btn.Tag;
+
+            if (selectedPlugboardChar == null)
+            {
+                // Первый клик: если буква уже соединена - разорвать; иначе - выделить
+                if (plugboardPairs.ContainsKey(letter))
+                {
+                    char paired = plugboardPairs[letter];
+                    plugboardPairs.Remove(letter);
+                    plugboardPairs.Remove(paired);
+                    selectedPlugboardChar = null;
+                }
+                else
+                {
+                    selectedPlugboardChar = letter;
+                }
+            }
+            else
+            {
+                if (selectedPlugboardChar == letter)
+                {
+                    selectedPlugboardChar = null; // снимаем выделение
+                }
+                else if (plugboardPairs.ContainsKey(letter))
+                {
+                    // клик по уже соединённой — разорвать
+                    char paired = plugboardPairs[letter];
+                    plugboardPairs.Remove(letter);
+                    plugboardPairs.Remove(paired);
+                    selectedPlugboardChar = null;
+                }
+                else
+                {
+                    // связываем две буквы
+                    plugboardPairs[selectedPlugboardChar.Value] = letter;
+                    plugboardPairs[letter] = selectedPlugboardChar.Value;
+                    selectedPlugboardChar = null;
+                }
+            }
+            RefreshPlugboardButtons();
+        }
+
+        private void RefreshPlugboardButtons()
+        {
+            // Определяем уникальные пары и присваиваем каждой свой цвет
+            var pairList = new List<Tuple<char, char>>();
+            var visited = new HashSet<char>();
+
+            foreach (var kv in plugboardPairs)
+            {
+                char a = kv.Key;
+                char b = kv.Value;
+                if (a < b && !visited.Contains(a) && !visited.Contains(b))
+                {
+                    pairList.Add(Tuple.Create(a, b));
+                    visited.Add(a);
+                    visited.Add(b);
+                }
+            }
+
+            // Для каждой буквы вычисляем её цвет (индекс пары)
+            var colorIndexes = new Dictionary<char, int>();
+            for (int i = 0; i < pairList.Count; i++)
+            {
+                colorIndexes[pairList[i].Item1] = i;
+                colorIndexes[pairList[i].Item2] = i;
+            }
+
+            foreach (var kv in plugboardButtons)
+            {
+                char letter = kv.Key;
+                Button btn = kv.Value;
+
+                if (selectedPlugboardChar != null && selectedPlugboardChar == letter)
+                {
+                    btn.BackColor = Color.Yellow;
+                }
+                else if (colorIndexes.ContainsKey(letter))
+                {
+                    btn.BackColor = PairColors[colorIndexes[letter] % PairColors.Length];
+                }
+                else
+                {
+                    btn.BackColor = Color.LightGray;
+                }
+            }
         }
 
         // Кнопка "Сброс" - сбрасывает машину и очищает результаты (создайте такую кнопку в форме)
@@ -269,6 +418,57 @@ namespace EnigmaWindowsForms
             {
                 string output = textBox2.Text;
                 System.IO.File.WriteAllText(saveFileDialog1.FileName, output);
+            }
+        }
+
+        private void button33_Click(object sender, EventArgs e)
+        {
+            saveFileDialog1.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*";
+            saveFileDialog1.Title = "Сохранить настройки панели";
+
+            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                // Собираем уникальные пары (буквы идут по алфавиту)
+                var pairs = new HashSet<string>();
+                foreach (var kv in plugboardPairs)
+                {
+                    char a = kv.Key;
+                    char b = kv.Value;
+                    if (a < b)
+                        pairs.Add($"{a} {b}");
+                }
+                System.IO.File.WriteAllLines(saveFileDialog1.FileName, pairs);
+            }
+        }
+
+        private void button32_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*";
+            openFileDialog1.Title = "Загрузить настройки панели";
+
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                var lines = System.IO.File.ReadAllLines(openFileDialog1.FileName);
+
+                // Очистить текущие пары
+                plugboardPairs.Clear();
+
+                foreach (string line in lines)
+                {
+                    var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length == 2)
+                    {
+                        char a = char.ToUpper(parts[0][0]);
+                        char b = char.ToUpper(parts[1][0]);
+                        // Не добавлять, если буква уже в паре
+                        if (!plugboardPairs.ContainsKey(a) && !plugboardPairs.ContainsKey(b) && a != b)
+                        {
+                            plugboardPairs[a] = b;
+                            plugboardPairs[b] = a;
+                        }
+                    }
+                }
+                RefreshPlugboardButtons();
             }
         }
     }
