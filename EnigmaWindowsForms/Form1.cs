@@ -58,6 +58,7 @@ namespace EnigmaWindowsForms
             isInitializing = true;
             InitializeEnigma();
             UpdateRotorHeadsInTextBoxes();
+            textBox1.Text = "";
             isInitializing = false;
         }
 
@@ -67,6 +68,12 @@ namespace EnigmaWindowsForms
             if (isInitializing) return;
             try
             {
+                if (textBox1.Text.Length == 0)
+                {
+                    label7.Text = textBox3.Text; // Первый ротор
+                    label8.Text = textBox4.Text; // Второй ротор
+                    label9.Text = textBox5.Text; // Третий ротор
+                }
                 // Всегда пересоздаём машину и прогоняем весь текст
                 InitializeEnigma();
 
