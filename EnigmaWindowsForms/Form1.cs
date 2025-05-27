@@ -222,6 +222,7 @@ namespace EnigmaWindowsForms
                     label8.Text = textBox4.Text; // Второй ротор
                     label9.Text = textBox5.Text; // Третий ротор
                 }
+
                 // Всегда пересоздаём машину и прогоняем весь текст
                 InitializeEnigma();
 
@@ -470,6 +471,12 @@ namespace EnigmaWindowsForms
                 }
                 RefreshPlugboardButtons();
             }
+        }
+
+        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar >= 'А' && e.KeyChar <= 'я' )
+                e.KeyChar = '\n'; 
         }
     }
 }
