@@ -478,5 +478,42 @@ namespace EnigmaWindowsForms
             if (e.KeyChar >= 'А' && e.KeyChar <= 'я' )
                 e.KeyChar = '\n'; 
         }
+
+        private void UpdateTheme()
+        {
+            button2.BackColor = Properties.Settings.Default.BtnLoadColor;
+            button3.BackColor = Properties.Settings.Default.BtnLoadColor;
+            button33.BackColor = Properties.Settings.Default.BtnLoadColor;
+
+            button4.BackColor = Properties.Settings.Default.BtnSaveColor;
+            button5.BackColor = Properties.Settings.Default.BtnSaveColor;
+            button32.BackColor = Properties.Settings.Default.BtnSaveColor;
+
+            button1.BackColor = Properties.Settings.Default.BtnResetColor;
+
+            foreach (Control control in this.Controls)
+            {
+                if (control.GetType() != typeof(PictureBox))
+                {
+                    control.ForeColor = Properties.Settings.Default.TextColor;
+                }
+            }
+
+            this.BackColor = Properties.Settings.Default.FormColor;
+
+            this.Font = Properties.Settings.Default.FormFont;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            UpdateTheme();
+        }
+
+        private void button34_Click(object sender, EventArgs e)
+        {
+            SettingsForm settings = new SettingsForm();
+            settings.ShowDialog();
+            UpdateTheme();
+        }
     }
 }
