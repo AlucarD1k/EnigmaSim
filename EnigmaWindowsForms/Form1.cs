@@ -208,6 +208,15 @@ namespace EnigmaWindowsForms
             UpdateRotorHeadsInTextBoxes();
             textBox1.Text = "";
             isInitializing = false;
+            comboBox1.Enabled = comboBox2.Enabled = comboBox3.Enabled = comboBox4.Enabled =
+                        textBox3.Enabled = textBox4.Enabled = textBox5.Enabled = 
+                        button2.Enabled = button4.Enabled = 
+                        button32.Enabled = button33.Enabled = true;
+            for (int i = 0; i < 26; i++)
+            {
+                Button btn = this.Controls.Find($"button{6 + i}", true)[0] as Button;
+                btn.Enabled = true;
+            }
         }
 
         // Реальное шифрование по мере ввода
@@ -221,6 +230,27 @@ namespace EnigmaWindowsForms
                     label7.Text = textBox3.Text; // Первый ротор
                     label8.Text = textBox4.Text; // Второй ротор
                     label9.Text = textBox5.Text; // Третий ротор
+                    comboBox1.Enabled = comboBox2.Enabled = comboBox3.Enabled = comboBox4.Enabled =
+                        textBox3.Enabled = textBox4.Enabled = textBox5.Enabled =
+                        button2.Enabled = button4.Enabled =
+                        button32.Enabled = button33.Enabled = true;
+                    for (int i = 0; i < 26; i++)
+                    {
+                        Button btn = this.Controls.Find($"button{6 + i}", true)[0] as Button;
+                        btn.Enabled = true;
+                    }
+                }
+                else
+                {
+                    comboBox1.Enabled = comboBox2.Enabled = comboBox3.Enabled = comboBox4.Enabled =
+                        textBox3.Enabled = textBox4.Enabled = textBox5.Enabled =
+                        button2.Enabled = button4.Enabled =
+                        button32.Enabled = button33.Enabled = false;
+                    for (int i = 0; i < 26; i++)
+                    {
+                        Button btn = this.Controls.Find($"button{6 + i}", true)[0] as Button;
+                        btn.Enabled = false;
+                    }
                 }
 
                 // Всегда пересоздаём машину и прогоняем весь текст
