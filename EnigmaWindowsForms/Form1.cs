@@ -200,7 +200,7 @@ namespace EnigmaWindowsForms
             }
         }
 
-        // Кнопка "Сброс" - сбрасывает машину и очищает результаты (создайте такую кнопку в форме)
+        // Кнопка "Сброс" - сбрасывает машину и очищает результаты 
         private void buttonReset_Click(object sender, EventArgs e)
         {
             isInitializing = true;
@@ -477,6 +477,8 @@ namespace EnigmaWindowsForms
         {
             if (e.KeyChar >= 'А' && e.KeyChar <= 'я' )
                 e.KeyChar = '\n'; 
+            if (e.KeyChar >= 'A' && e.KeyChar <= 'z')
+                e.KeyChar = char.Parse((e.KeyChar).ToString().ToUpper());
         }
 
         private void UpdateTheme()
